@@ -105,10 +105,10 @@ void int2string(uint8_t number, char *numberStr) {
     numberStr[index] = 0x0;
 }
 
-uint8_t string2int(char *numberStr) { //Only for numbers 0..100
+uint8_t string2int(char *numberStr) { //Only for numbers 0..100 strip from dot
     uint8_t result = 0;
     uint8_t index = 0;
-    while (*numberStr != 0x0 && index != 3) {
+    while (*numberStr != 0x0 && *numberStr!= '.' && index != 3) {
         result = 10 * result + *numberStr - '0';
         index++;
         numberStr++;
