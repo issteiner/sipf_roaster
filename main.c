@@ -6,6 +6,7 @@
 #define LF      0xA
 #define SEPARATOR ';'
 #define BUFFERSIZE 15
+#define ERROR 255
 
 const uint24_t powerBitTable[] = {
     0x000000,
@@ -46,7 +47,7 @@ const uint16_t pwmLevel[] = {
 };
 
 enum ArtisanCommand {
-    READ, CHAN, DCFAN, OT1, ERROR //, FILT, UNITS
+    READ, CHAN, DCFAN, OT1, ELSE //, FILT, UNITS
 };
 
 enum ArtisanCommand getCommandAndParams(char *, char *);
@@ -78,8 +79,8 @@ uint8_t isEqual(char *str1, char *str2) {
         str1++;
         str2++;
     }
-    if (*str1 == 0x0 && *str2 == 0x0) return 1;
-    else return 0;
+    if (*str1 == 0x0 && *str2 == 0x0) return true;
+    else return false;
 }
 
 uint8_t startsWith(char *str1, char *str2) { // str1: what, str2: in what
@@ -87,8 +88,8 @@ uint8_t startsWith(char *str1, char *str2) { // str1: what, str2: in what
         str1++;
         str2++;
     }
-    if (*str1 == 0x0) return 1;
-    else return 0;
+    if (*str1 == 0x0) return true;
+    else return false;
 }
 
 void int2string(uint8_t number, char *numberStr) {
@@ -105,16 +106,16 @@ void int2string(uint8_t number, char *numberStr) {
     numberStr[index] = 0x0;
 }
 
-uint8_t string2int(char *numberStr) { //Only for numbers 0..100 strip from dot
+uint8_t string2int(char *numberStr) { //Only for numbers 0..100 & strip right from dot
     uint8_t result = 0;
     uint8_t index = 0;
-    while (*numberStr != 0x0 && *numberStr!= '.' && index != 3) {
+    while (*numberStr != 0x0 && *numberStr != '.' && index != 3) {
         result = 10 * result + *numberStr - '0';
         index++;
         numberStr++;
     }
-    if (*numberStr == 0x0 && result <= 100) return result;
-    else return 255; // Error
+    if ((*numberStr == 0x0 || *numberStr == '.') && result <= 100) return result;
+    else return ERROR;
 }
 
 enum ArtisanCommand getCommandAndParams(char *readLine, char *params) {
@@ -125,7 +126,7 @@ enum ArtisanCommand getCommandAndParams(char *readLine, char *params) {
     }
     if (startsWith("DCFAN;", readLine)) return DCFAN;
     if (startsWith("OT1;", readLine)) return OT1;
-    return ERROR;
+    return ELSE;
 }
 
 uint8_t getParams(char *readLine, char *params) {
@@ -194,7 +195,7 @@ void sendLf2Serial() {
 }
 
 uint8_t convert2Celsius(adc_result_t avg_result) {
-    return (uint8_t) avg_result/4;
+    return (uint8_t) avg_result / 4;
 }
 
 uint8_t getBeanTemperature() {
@@ -221,10 +222,12 @@ void main(void) {
     SYSTEM_Initialize();
 
     setHeaterPower(10);
-    setDcFanSpeed(30);
+    setDcFanSpeed(20);
 
     INTERRUPT_GlobalInterruptEnable();
     INTERRUPT_PeripheralInterruptEnable();
+
+    index = 0;
 
     while (1) {
         readByte = EUSART1_Read();
@@ -244,13 +247,13 @@ void main(void) {
                     break;
                 case DCFAN:
                     dcFanSpeed = string2int(parameters);
-                    if (dcFanSpeed != 255) setDcFanSpeed(dcFanSpeed);
+                    if (dcFanSpeed != ERROR) setDcFanSpeed(dcFanSpeed);
                     break;
                 case OT1:
                     heaterPower = string2int(parameters);
-                    if (heaterPower != 255) setHeaterPower(heaterPower);
+                    if (heaterPower != ERROR) setHeaterPower(heaterPower);
                     break;
-                case ERROR:
+                case ELSE: // Getting rid of BT module messages CONNECTED, DISC:<reason>, +READY\r\n\n+PAIRABLE\r\n\n
                     break;
             }
             index = 0;
