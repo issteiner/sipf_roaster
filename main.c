@@ -230,6 +230,7 @@ void main(void) {
         readByte = EUSART1_Read();
         if (readByte != LF) {
             readBuffer[index++] = readByte;
+// Check buffer overflow here!!
         } else {
             readBuffer[index] = 0x0; // end of string
             aCommand = getCommandAndParams(readBuffer, parameters);
