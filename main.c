@@ -235,7 +235,7 @@ void main(void) {
         readByte = EUSART1_Read();
         if (readByte != LF) {
             readBuffer[index++] = readByte;
-// Check buffer overflow here!!
+            if (index >= BUFFERSIZE) index = 0; // Handle buffer overflow during garbage
         } else {
             readBuffer[index] = 0x0; // end of string
             aCommand = getCommandAndParams(readBuffer, parameters);
