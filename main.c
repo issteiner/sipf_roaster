@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define EOS     0x0   // End of string
+#define EOL     0x0
 #define CR      0xD
 #define LF      0xA
 #define SEPARATOR ';'
