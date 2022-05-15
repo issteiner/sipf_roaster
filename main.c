@@ -233,9 +233,15 @@ void main(void) {
 
     while (1) {
         readByte = EUSART1_Read();
-        if (readByte != LF) {
+        if (readByte != LF && readByte != CR) {
             readBuffer[index++] = readByte;
-            if (index >= BUFFERSIZE) index = 0; // Handle buffer overflow during garbage
+            if (index >= BUFFERSIZE) index = 0; // Handling buffer overflow during garbage
+        } else if (readByte == CR) {
+            index = 0;
+            if (startsWith("+DISC:", readBuffer)) {  // Handling client disconnect from the BT module
+                    setHeaterPower(10);
+                    setDcFanSpeed(50);
+                }
         } else {
             readBuffer[index] = EOS;
             aCommand = getCommandAndParams(readBuffer, parameters);
@@ -255,7 +261,7 @@ void main(void) {
                     heaterPower = string2int(parameters);
                     if (heaterPower != ERROR) setHeaterPower(heaterPower);
                     break;
-                case ELSE: // Getting rid of BT module messages CONNECTED, DISC:<reason>, +READY\r\n\n+PAIRABLE\r\n\n
+                case ELSE: // Getting rid of BT module messages
                     break;
             }
             index = 0;
