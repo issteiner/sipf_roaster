@@ -77,20 +77,20 @@ void int2string(uint8_t, char *);
 uint8_t string2int(char *);
 
 uint8_t isEqual(char *str1, char *str2) {
-    while (*str1 != 0x0 && *str1 == *str2) {
+    while (*str1 != EOS && *str1 == *str2) {
         str1++;
         str2++;
     }
-    if (*str1 == 0x0 && *str2 == 0x0) return true;
+    if (*str1 == EOS && *str2 == EOS) return true;
     else return false;
 }
 
 uint8_t startsWith(char *str1, char *str2) { // str1: what, str2: in what
-    while (*str1 != 0x0 && *str1 == *str2) {
+    while (*str1 != EOS && *str1 == *str2) {
         str1++;
         str2++;
     }
-    if (*str1 == 0x0) return true;
+    if (*str1 == EOS) return true;
     else return false;
 }
 
@@ -105,18 +105,18 @@ void int2string(uint8_t number, char *numberStr) {
         numberStr[index++] = tenths + '0';
     };
     numberStr[index++] = number % 10 + '0';
-    numberStr[index] = 0x0;
+    numberStr[index] = EOS;
 }
 
 uint8_t string2int(char *numberStr) { //Only for numbers 0..100 & strip right from dot
     uint8_t result = 0;
     uint8_t index = 0;
-    while (*numberStr != 0x0 && *numberStr != '.' && index != 3) {
+    while (*numberStr != EOS && *numberStr != '.' && index != 3) {
         result = 10 * result + *numberStr - '0';
         index++;
         numberStr++;
     }
-    if ((*numberStr == 0x0 || *numberStr == '.') && result <= 100) return result;
+    if ((*numberStr == EOS || *numberStr == '.') && result <= 100) return result;
     else return ERROR;
 }
 
@@ -133,16 +133,16 @@ enum ArtisanCommand getCommandAndParams(char *readLine, char *params) {
 
 uint8_t getParams(char *readLine, char *params) {
     uint8_t length = 0;
-    while (*readLine != SEPARATOR && *readLine != 0x0) readLine++;
-    if (*readLine == 0x0) return 0;
+    while (*readLine != SEPARATOR && *readLine != EOL) readLine++;
+    if (*readLine == EOL) return 0;
     readLine++;
-    while (*readLine != 0x0) {
+    while (*readLine != EOL) {
         *params = *readLine;
         params++;
         readLine++;
         length++;
     }
-    *params = 0x0;
+    *params = EOS;
     return length;
 }
 
@@ -197,7 +197,7 @@ void sendLf2Serial() {
 }
 
 uint8_t convert2Celsius(adc_result_t avg_result) {
-    return (uint8_t) avg_result / 4;
+    return (uint8_t) (avg_result >> 2);
 }
 
 uint8_t getBeanTemperature() {
@@ -237,7 +237,7 @@ void main(void) {
             readBuffer[index++] = readByte;
             if (index >= BUFFERSIZE) index = 0; // Handle buffer overflow during garbage
         } else {
-            readBuffer[index] = 0x0; // end of string
+            readBuffer[index] = EOS;
             aCommand = getCommandAndParams(readBuffer, parameters);
             switch (aCommand) {
                 case READ:
